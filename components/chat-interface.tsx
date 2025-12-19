@@ -1,8 +1,7 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { useEffect, useRef, useState } from "react";
+import { useChat } from "ai/react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -32,15 +31,11 @@ async function handleSignOut() {
 }
 
 export function ChatInterface({ user }: { user: User }) {
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-    }),
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: "/api/chat",
   });
-  const [input, setInput] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isLoading = status === "submitted" || status === "streaming";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -202,19 +197,13 @@ export function ChatInterface({ user }: { user: User }) {
       {/* Input */}
       <div className="border-t p-4">
         <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (input.trim()) {
-              await sendMessage({ text: input });
-              setInput("");
-            }
-          }}
+          onSubmit={handleSubmit}
           className="mx-auto max-w-3xl"
         >
           <div className="flex gap-2">
             <Input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               placeholder="Ask me anything..."
               disabled={isLoading}
               className="flex-1"

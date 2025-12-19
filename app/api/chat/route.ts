@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
   const { messages } = await req.json();
 
-  const result = streamText({
+  const result = await streamText({
     model: openai("gpt-4o-mini"),
     messages,
     tools: {
@@ -28,5 +28,5 @@ export async function POST(req: Request) {
     Be concise and friendly in your responses.`,
   });
 
-  return result.toTextStreamResponse();
+  return result.toDataStreamResponse();
 }

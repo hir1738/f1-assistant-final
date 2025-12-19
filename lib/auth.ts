@@ -6,6 +6,8 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  basePath: "/api/auth",
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -28,17 +30,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .limit(1);
 
         if (existingUser.length === 0) {
+          console.log("Creating new user:", user.email);
           await db.insert(users).values({
             email: user.email,
             name: user.name || null,
             image: user.image || null,
             provider: account.provider,
           });
+          console.log("User created successfully");
+        } else {
+          console.log("Existing user found:", user.email);
         }
 
         return true;
       } catch (error) {
         console.error("Error during sign in:", error);
+        console.error("User email:", user.email);
+        console.error("Provider:", account.provider);
         return false;
       }
     },

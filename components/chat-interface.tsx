@@ -1,7 +1,8 @@
 "use client";
 
-import { useChat } from "ai/react";
-import { useEffect, useRef } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -16,7 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { WeatherCard } from "@/components/tool-cards/weather-card";
 import { F1Card } from "@/components/tool-cards/f1-card";
 import { StockCard } from "@/components/tool-cards/stock-card";
-import { signOut } from "next-auth/react";
 
 interface User {
   name?: string | null;
@@ -24,13 +24,23 @@ interface User {
   image?: string | null;
 }
 
+async function handleSignOut() {
+  await fetch("/api/auth/signout", {
+    method: "POST",
+  });
+  window.location.href = "/login";
+}
+
 export function ChatInterface({ user }: { user: User }) {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
       api: "/api/chat",
-    });
+    }),
+  });
+  const [input, setInput] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isLoading = status === "submitted" || status === "streaming";
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,9 +90,7 @@ export function ChatInterface({ user }: { user: User }) {
                 </div>
               </div>
               <Separator />
-              <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: "/login" })}
-              >
+              <DropdownMenuItem onClick={handleSignOut}>
                 Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -125,7 +133,7 @@ export function ChatInterface({ user }: { user: User }) {
             </Card>
           )}
 
-          {messages.map((message) => (
+          {messages.map((message:any) => (
             <div
               key={message.id}
               className={`flex gap-3 ${
@@ -193,11 +201,20 @@ export function ChatInterface({ user }: { user: User }) {
 
       {/* Input */}
       <div className="border-t p-4">
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (input.trim()) {
+              await sendMessage({ text: input });
+              setInput("");
+            }
+          }}
+          className="mx-auto max-w-3xl"
+        >
           <div className="flex gap-2">
             <Input
               value={input}
-              onChange={handleInputChange}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Ask me anything..."
               disabled={isLoading}
               className="flex-1"

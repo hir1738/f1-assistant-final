@@ -190,17 +190,61 @@ git push origin main
 
 1. Go to [Vercel](https://vercel.com)
 2. Import your GitHub repository
-3. Configure environment variables (same as `.env.local`)
-4. Update OAuth callback URLs to use your Vercel domain
-5. Deploy
+3. Configure environment variables in Vercel Dashboard
+4. Deploy
 
-### 3. Update Environment Variables
+### 3. Configure Environment Variables in Vercel
 
-After deployment, update your OAuth providers:
+Add all environment variables from your `.env.local` file to Vercel:
 
-- **Google OAuth**: Add `https://your-domain.vercel.app/api/auth/callback/google`
-- **GitHub OAuth**: Add `https://your-domain.vercel.app/api/auth/callback/github`
-- **NextAuth URL**: Set to `https://your-domain.vercel.app`
+**Important for Production:**
+- **DO NOT set `NEXTAUTH_URL`** in production environment variables
+- The app will automatically detect the production URL when deployed
+- Only set `NEXTAUTH_URL=http://localhost:3000` in your local `.env.local`
+
+Required environment variables for Vercel:
+```
+DATABASE_URL=your_production_database_url
+NEXTAUTH_SECRET=your_secret_key
+AUTH_SECRET=your_secret_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GITHUB_ID=your_github_client_id
+GITHUB_SECRET=your_github_client_secret
+OPENAI_API_KEY=your_openai_api_key
+OPENWEATHER_API_KEY=your_openweather_api_key
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_api_key
+```
+
+### 4. Update OAuth Provider Settings
+
+After your first deployment, Vercel will give you a domain (e.g., `your-app.vercel.app`). Update your OAuth providers:
+
+#### Google OAuth Console
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Navigate to your OAuth 2.0 Client
+3. Add to **Authorized redirect URIs**:
+   - `https://your-app.vercel.app/api/auth/callback/google`
+   - Keep `http://localhost:3000/api/auth/callback/google` for local development
+
+#### GitHub OAuth App
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Edit your OAuth App
+3. Add to **Authorization callback URL**:
+   - `https://your-app.vercel.app/api/auth/callback/github`
+   - Create a separate OAuth app for production if you want to keep them isolated
+
+### 5. Redeploy (if needed)
+
+After updating OAuth settings, your app should work. If not, trigger a redeployment in Vercel.
+
+### Production vs Development Setup
+
+| Setting | Development | Production |
+|---------|------------|------------|
+| `NEXTAUTH_URL` | `http://localhost:3000` | **Omit** (auto-detected) |
+| Google OAuth Callback | `http://localhost:3000/api/auth/callback/google` | `https://your-domain.vercel.app/api/auth/callback/google` |
+| GitHub OAuth Callback | `http://localhost:3000/api/auth/callback/github` | `https://your-domain.vercel.app/api/auth/callback/github` |
 
 ## Features Demo
 
